@@ -1,4 +1,4 @@
-local Version = 1.454
+local Version = 1.457
 local FileName = GetCurrentEnv().FILE_NAME
 local Debug = false
 
@@ -877,6 +877,11 @@ function VayneMenu()
     Menu.Combo:addParam("qforgap", "Use Q For Gapcloser", SCRIPT_PARAM_ONOFF, true)
     Menu.Combo:addParam("qmethod", "Q Method", SCRIPT_PARAM_LIST, 1, {"AA Reset", "Passive Proc."})
     Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu.Combo:addParam("finishim", "Use E For Finisher", SCRIPT_PARAM_ONOFF, true)
+    Menu.Combo:addParam("fie", "Disable If X Enemy Around", SCRIPT_PARAM_SLICE, 2, 0, 5, 0)
+    Menu.Combo:addParam("fimh", "Disable If My Health < %X", SCRIPT_PARAM_SLICE, 0, 1, 100, 0)
+    Menu.Combo:addParam("fieh", "Disable If Enemy Health < %X", SCRIPT_PARAM_SLICE, 0, 1, 100, 0)
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Combo:addParam("R", "Use R", SCRIPT_PARAM_ONOFF, true)
     Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Combo:addParam("focus", "Left Click Focus Target", SCRIPT_PARAM_ONOFF, true)
@@ -967,7 +972,7 @@ function VayneMenu()
     Menu.Draw:addParam("stream", "Enable Streaming Mode", SCRIPT_PARAM_ONKEYTOGGLE, false, 118)
     Menu.Draw:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Draw:addParam("Info1", " Izsha", SCRIPT_PARAM_INFO, "")
-    
+
     Menu:addSubMenu("Extra Settings", "extras")
     Menu.extras:addParam("buyme", "Auto Buy Starting Items", SCRIPT_PARAM_ONOFF, false)
     Menu.extras:addParam("Blank", "", SCRIPT_PARAM_INFO, "","" )
@@ -1030,6 +1035,7 @@ function LoadOrbwalk()
     Menu.Orbwalker:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
     ScriptMsg("Sida's Auto Carry Detected.")
   elseif _G.Reborn_Loaded then
+    _G.DisableSACVayne = true
     DelayAction(function() LoadOrbwalk() end, 1)
   elseif _G.MMA_IsLoaded then
     MMALoaded = true
@@ -1799,6 +1805,54 @@ end
   
 end]]--
 
+function GetDmg(spell, enemy)
+
+  if enemy.health == 0 then
+    return 0
+  end
+  
+  local ADDmg = 0
+  local PureDmg = 0
+  local APDmg = 0
+  local Level = myHero.level
+  local TotalDmg = myHero.totalDamage
+  local AddDmg = myHero.addDamage
+  local AP = myHero.ap
+  local ArmorPen = myHero.armorPen
+  local ArmorPenPercent = myHero.armorPenPercent
+  local MagicPen = myHero.magicPen
+  local MagicPenPercent = myHero.magicPenPercent
+  
+  local Armor = math.max(0, enemy.armor*ArmorPenPercent-ArmorPen)
+  local ArmorPercent = Armor/(100+Armor)
+  local MagicArmor = math.max(0, enemy.magicArmor*MagicPenPercent-MagicPen)
+  local MagicArmorPercent = MagicArmor/(100+MagicArmor)
+    
+    if spell == "AA" then
+    ADDmg = TotalDmg
+
+    elseif spell == "Q" then
+    if Q.ready then
+      ADDmg = (.05*Q.level+.25)*TotalDmg
+    end
+    
+    elseif spell == "W" then
+    if W.ready and Wstacks[spell.target.networkID] == 2 then
+      PureDmg = (.015*W.level+.045)*enemyHero.maxHealth
+    end
+    
+    elseif spell == "E" then
+    if E.ready then
+      ADDmg = 35*E.level+10+0.5*TotalDmg
+    end
+    
+  end
+  
+  local TrueDmg = ADDmg*(1-ArmorPercent)+APDmg*(1-MagicArmorPercent)
+  
+  return TrueDmg
+end
+
 function OnProcessAttack(unit, spell)
 
   if unit.isMe and spell.name:lower():find("attack") and Menu.Control.OnC and Menu.Combo.Q and Q.ready and Menu.Combo.qmethod == 1 then
@@ -1855,9 +1909,28 @@ function OnProcessAttack(unit, spell)
         end
   end
 
+if not (EnemiesAround(myHero, 650) >= Menu.Combo.fie and (math.floor(myHero.health / myHero.maxHealth * 100)) <= Menu.Combo.fimh and (math.floor(enemyHero.health / enemyHero.maxHealth * 100)) <= Menu.Combo.fieh) then
+  if unit.isMe and spell.name:lower():find("attack") then
+  if spell.target then SpellTarget = spell.target end
+    if Menu.Control.OnC and Menu.Combo.finishim and SpellTarget.type == myHero.type and E.ready then
+      for i, enemy in ipairs(EnemyHeroes) do
+          if GetDmg("E", enemy) >= enemy.health then
+            CastSpell(_E, SpellTarget)
+          elseif Wstacks[SpellTarget.networkID] == 2 then
+            if GetDmg("E", enemy)+GetDmg("W", enemy) >= enemy.health then
+            CastSpell(_E, SpellTarget)
+          else
+            DelayAction(function() CastSpell(_Q, SpellTarget) end, spell.windUpTime + GetLatency()/2000)
+          end
+        end
+      end
+    end
+  end
+end
+
 if unit.isMe and spell.name:lower():find("attack") then
         if spell.target then SpellTarget = spell.target end
-        if Menu.Combo.qforgap and SpellTarget.type == myHero.type and Q.ready and GetDistance(SpellTarget) > 715 and Menu.Control.OnC then
+        if Menu.Combo.qforgap and SpellTarget.type == myHero.type and Q.ready and GetDistance(SpellTarget) > 650 and Menu.Control.OnC then
         DelayAction(function() CastSpell(_Q, SpellTarget) end, spell.windUpTime + GetLatency()/2000)
   end
 end
@@ -2104,7 +2177,7 @@ function OnDraw()
               DrawTextA(tostring("Latest Changelog (" .. Version .. ") ;"), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.229), ARGB(255, 0, 222, 225))
               DrawTextA(tostring(" "), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.210), ARGB(255, 255, 255, 255))
               DrawTextA(tostring(" "), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.225), ARGB(255, 255, 255, 255))
-              DrawTextA(tostring("- Released."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.259), ARGB(255, 0, 222, 225))
+              DrawTextA(tostring("- SAC:R Vayne plugin will be disabled now if SAC:R loaded."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.259), ARGB(255, 0, 222, 225))
               DrawTextA(tostring(""), WINDOW_H*.015, (WINDOW_W/2.70), (WINDOW_H*.260), ARGB(255, 0, 222, 225))
               DrawTextA(tostring(""), WINDOW_H*.015, (WINDOW_W/2.70), (WINDOW_H*.280), ARGB(255, 0, 222, 225))
               local w, h1, h2 = (WINDOW_W*0.49), (WINDOW_H*.70), (WINDOW_H*.75)
