@@ -1,4 +1,4 @@
-local Version = 1.454
+local Version = 1.455
 local FileName = GetCurrentEnv().FILE_NAME
 local Debug = false
 
@@ -4885,8 +4885,8 @@ function Variables()
   SACLoaded, PEWLoaded, MMALoaded, SxOrbLoaded = false, false, false, false
   
   Q = {range = 1300, radius = 0, speed = 2200, delay = 0.625}
-  W = {range = 750, width = 30, speed = 2000, delay = 0.600}
-  E = {range = 1000, width = 80, speed = 2000, delay = 0.400}
+  W = {range = 750, radius = 30, speed = 2000, delay = 0.600}
+  E = {range = 1000, radius = 80, speed = 2000, delay = 0.400}
   R = {range = 2000}
   I = {range = 600}
   
@@ -5972,15 +5972,13 @@ end
 function Combo()
 
   if QTarget ~= nil then
-    if Menu.Combo.Q3 then
   
     local ComboQ = Menu.Combo.Q
     local ComboQ2 = Menu.Combo.Q2
     
     if Q.ready and ComboQ and ComboQ2 <= ManaPercent() and ValidTarget(QTarget, Q.range+QTarget.boundingRadius) then
-      CastQCollision(QTarget, "Combo")
+      CastQ(QTarget, "Combo")
     end
-  end
   end
 
   if QTarget ~= nil then
@@ -6021,26 +6019,17 @@ function Combo()
   
     local ComboE = Menu.Combo.E
     local ComboE2 = Menu.Combo.E2
-    local QTargetDmg = GetDmg("Q", enemy)
-    local ETargetDmg = GetDmg("E", enemy)
-    local RTargetDmg = GetDmg("R", enemy)
   
-    if E.ready and ComboE and ComboE2 <= ManaPercent() then
-    
-      if ValidTarget(ETarget, Menu.Combo.range+ETarget.boundingRadius) then
-        CastE(ETarget, "Combo")
-      end
+    if E.ready and ComboE and ComboE2 <= ManaPercent() and ValidTarget(ETarget, Menu.Combo.range+ETarget.boundingRadius) then
+      CastE(ETarget, "Combo")
+    end
       
       for i, enemy in ipairs(EnemyHeroes) do
       
         if ValidTarget(enemy, Menu.Combo.range+100) then
           CastE(enemy, "Combo")
         end
-        
       end
-      
-    end
-    
   end
 
 end
@@ -6139,7 +6128,7 @@ function Harass()
     local HarassW = Menu.Harass.W
     local HarassW2 = Menu.Harass.W2
     
-    if W.ready and HarassW and HarassW2 <= ManaPercent() and ValidTarget(WTarget, W.range+W.width+WTarget.boundingRadius) then
+    if W.ready and HarassW and HarassW2 <= ManaPercent() and ValidTarget(WTarget, W.range+W.radius+WTarget.boundingRadius) then
       CastWStn(WTarget, "Harass")
     end
   end
@@ -6442,19 +6431,19 @@ local r = myHero.range
 local trange = r < 700 and r or 700
 
 if Menu.Prediction.Choice == 1 and VPred and not isFleeingFromMe(unit, trange) or not amIFleeing(unit, trange) then
-    local CastPosition, HitChance, Position = VPred:GetCircularCastPosition(unit, W.delay, W.width, W.range, W.speed)
+    local CastPosition, HitChance, Position = VPred:GetCircularCastPosition(unit, W.delay, W.radius, W.range, W.speed)
     if mode == "Combo" and HitChance >= Menu.Prediction.VPrediction.W or (mode == "Harass" or mode == nil) and HitChance > 1 then
       CastSpell(_W, CastPosition.x, CastPosition.z)
     end
   
   elseif Menu.Prediction.Choice == 2 and HPred and not isFleeingFromMe(unit, trange) or not amIFleeing(unit, trange) then
-    local Pos, HitChance = HPred:GetPredict(HPSkillshot({type = "DelayCircle", delay = W.delay, range = W.range, radius = W.width, speed = W.speed}), unit, myHero)
+    local Pos, HitChance = HPred:GetPredict(HPSkillshot({type = "DelayCircle", delay = W.delay, range = W.range, radius = W.radius, speed = W.speed}), unit, myHero)
     if mode == "Combo" and HitChance >= Menu.Prediction.HPrediction.W or (mode == "Harass" or mode == nil) and HitChance > 1 then
       CastSpell(_W, Pos.x, Pos.z)
     end
     
   elseif Menu.Prediction.Choice == 3 and not isFleeingFromMe(unit, trange) or not amIFleeing(unit, trange) then
-   local CastPosition, hc, info = FHPrediction.GetPrediction({range = W.range, speed = W.speed, delay = W.delay, radius = W.width, type = SkillShotType.SkillshotCircle}, unit)
+   local CastPosition, hc, info = FHPrediction.GetPrediction({range = W.range, speed = W.speed, delay = W.delay, radius = W.radius, type = SkillShotType.SkillshotCircle}, unit)
     if mode == "Combo" and hc >= Menu.Prediction.FHPrediction.W or (mode == "Harass" or mode == nil) and hc > 0 then
       if CastPosition ~= nil then
         CastSpell(_W, CastPosition.x, CastPosition.z)
@@ -6462,7 +6451,7 @@ if Menu.Prediction.Choice == 1 and VPred and not isFleeingFromMe(unit, trange) o
     end
 
   elseif Menu.Prediction.Choice == 4 and KPred and not isFleeingFromMe(unit, trange) or not amIFleeing(unit, trange) then
-    local Pos, HitChance = KPred:GetPrediction(KPSkillshot({type = "DelayCircle", delay = W.delay, range = W.range, radius = W.width, speed = W.speed}), unit, myHero)
+    local Pos, HitChance = KPred:GetPrediction(KPSkillshot({type = "DelayCircle", delay = W.delay, range = W.range, radius = W.radius, speed = W.speed}), unit, myHero)
     if mode == "Combo" and HitChance >= Menu.Prediction.KPrediction.W or (mode == "Harass" or mode == nil) and HitChance > 1 then
       CastSpell(_W, Pos.x, Pos.z)
     end
@@ -6479,27 +6468,27 @@ if unit.dead then return end
 
 if Menu.Prediction.Choice == 1 and VPred then
     local CastPosition, HitChance, Position = VPred:GetLineCastPosition(unit, E.delay, E.radius, E.range, E.speed, myHero, true)
-    if mode == "Combo" and HitChance >= Menu.Prediction.VPrediction.E or (mode == "KillSteal" or mode == "JSteal" or mode == "Krispy" or mode == nil) and HitChance > 1 then
+    if mode == "Combo" and HitChance >= Menu.Prediction.VPrediction.E or (mode == "KillSteal" or mode == "Krispy" or mode == nil) and HitChance > 1 then
       CastSpell(_E, CastPosition.x, CastPosition.z)
     end
   
   elseif Menu.Prediction.Choice == 2 and HPred then
     local Pos, HitChance = HPred:GetPredict(HPSkillshot({type = "DelayLine", delay = E.delay, range = E.range, width = E.radius, speed = E.speed, collisionM = true, collisionH = true}), unit, myHero)
-    if mode == "Combo" and HitChance >= Menu.Prediction.HPrediction.E or (mode == "KillSteal" or mode == "JSteal" or mode == "Krispy" or mode == nil) and HitChance > 1 then
+    if mode == "Combo" and HitChance >= Menu.Prediction.HPrediction.E or (mode == "KillSteal" or mode == "Krispy" or mode == nil) and HitChance > 1 then
       CastSpell(_E, Pos.x, Pos.z)
     end
     
   elseif Menu.Prediction.Choice == 3 then
    local CastPosition, hc, info = FHPrediction.GetPrediction({range = E.range, speed = E.speed, delay = E.delay, radius = E.radius, type = SkillShotType.SkillshotMissileLine}, unit)
-    if mode == "Combo" and hc >= Menu.Prediction.FHPrediction.E or (mode == "KillSteal" or mode == "JSteal" or mode == "Krispy" or mode == nil) and hc > 0 then
+    if mode == "Combo" and hc >= Menu.Prediction.FHPrediction.E or (mode == "KillSteal" or mode == "Krispy" or mode == nil) and hc > 0 then
       if CastPosition ~= nil and not infocollision then
-        CastSpell(_W, CastPosition.x, CastPosition.z)
+        CastSpell(_E, CastPosition.x, CastPosition.z)
       end
     end
   
   elseif Menu.Prediction.Choice == 4 and KPred then
     local Pos, HitChance = KPred:GetPrediction(KPSkillshot({type = "DelayLine", delay = E.delay, range = E.range, width = E.radius, speed = E.speed}), unit, myHero, true)
-    if mode == "Combo" and HitChance >= Menu.Prediction.KPrediction.E or (mode == "KillSteal" or mode == "JSteal" or mode == "Krispy" or mode == nil) and HitChance > 1 then
+    if mode == "Combo" and HitChance >= Menu.Prediction.KPrediction.E or (mode == "KillSteal" or mode == "Krispy" or mode == nil) and HitChance > 1 then
       CastSpell(_E, Pos.x, Pos.z)
     end
 
