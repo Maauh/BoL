@@ -1,4 +1,4 @@
-local Version = 1.455
+local Version = 1.456
 local FileName = GetCurrentEnv().FILE_NAME
 local Debug = false
 
@@ -758,18 +758,7 @@ function Variables()
       UpdateHPred()
     end
 
-    local function UpdateFHPred()
-
-        if FileExist(LIB_PATH .. "FHPrediction.lua") then
-          require("FHPrediction")    
-        else
-          DownloadFile("http://api.funhouse.me/download-lua.php", LIB_PATH .. "FHPrediction.lua", function() UpdateFHPred() end)
-        end
-    end
-
-  UpdateFHPred()
-
-    if _G.KPrediction_Init then
+  if _G.KPrediction_Init then
       KPred = KPrediction()  
     else
 
@@ -962,6 +951,8 @@ function CorkiMenu()
     Menu.Prediction:addParam("Choice", "Prediction Method", SCRIPT_PARAM_LIST, 1, {"VPrediction", "HPrediction", "FHPrediction", "KPrediction"})
     Menu.Prediction:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Prediction:addParam("Info", " Izsha & HTTF", SCRIPT_PARAM_INFO, "")
+    LoadPrediction(Menu.Prediction.Choice)
+    Menu.Prediction:setCallback("Choice", function(var) LoadPrediction(Menu.Prediction.Choice) end)
       
       Menu.Prediction:addSubMenu("VPrediction", "VPrediction")
       Menu.Prediction.VPrediction:addParam("Q", "Q Hitchance (2)", SCRIPT_PARAM_SLICE, 2, 1, 5, 1)  
@@ -1216,6 +1207,25 @@ function OnTick()
 end
 
 ---------------------------------------------------------------------------------
+
+function LoadPrediction(choice)
+
+if choice == 3 then
+
+local function UpdateFHPred()
+
+        if FileExist(LIB_PATH .. "FHPrediction.lua") then
+          require("FHPrediction")    
+        else
+          DownloadFile("http://api.funhouse.me/download-lua.php", LIB_PATH .. "FHPrediction.lua", function() UpdateFHPred() end)
+        end
+    end
+
+  UpdateFHPred()
+
+end
+end
+
 
 function AlliesAround(Unit, range)
     local c=0
@@ -2894,17 +2904,6 @@ function Variables()
       UpdateHPred()
     end
 
-    local function UpdateFHPred()
-
-        if FileExist(LIB_PATH .. "FHPrediction.lua") then
-          require("FHPrediction")    
-        else
-          DownloadFile("http://api.funhouse.me/download-lua.php", LIB_PATH .. "FHPrediction.lua", function() UpdateFHPred() end)
-        end
-    end
-
-  UpdateFHPred()
-
     if _G.KPrediction_Init then
       KPred = KPrediction()  
     else
@@ -3097,6 +3096,8 @@ function EzrealMenu()
     Menu.Prediction:addParam("Choice", "Prediction Method", SCRIPT_PARAM_LIST, 1, {"VPrediction", "HPrediction", "FHPrediction", "KPrediction"})
     Menu.Prediction:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Prediction:addParam("Info", " Izsha & HTTF", SCRIPT_PARAM_INFO, "")
+    LoadPrediction(Menu.Prediction.Choice)
+    Menu.Prediction:setCallback("Choice", function(var) LoadPrediction(Menu.Prediction.Choice) end)
       
       Menu.Prediction:addSubMenu("VPrediction", "VPrediction")
       Menu.Prediction.VPrediction:addParam("Q", "Q Hitchance (1.5)", SCRIPT_PARAM_SLICE, 1.5, 1, 5, 1)
@@ -3360,6 +3361,24 @@ function OnTick()
 end
 
 ---------------------------------------------------------------------------------
+
+function LoadPrediction(choice)
+
+if choice == 3 then
+
+local function UpdateFHPred()
+
+        if FileExist(LIB_PATH .. "FHPrediction.lua") then
+          require("FHPrediction")    
+        else
+          DownloadFile("http://api.funhouse.me/download-lua.php", LIB_PATH .. "FHPrediction.lua", function() UpdateFHPred() end)
+        end
+    end
+
+  UpdateFHPred()
+
+end
+end
 
 function AlliesAround(Unit, range)
     local c=0
@@ -5035,17 +5054,6 @@ function Variables()
       UpdateHPred()
     end
 
-    local function UpdateFHPred()
-
-        if FileExist(LIB_PATH .. "FHPrediction.lua") then
-          require("FHPrediction")    
-        else
-          DownloadFile("http://api.funhouse.me/download-lua.php", LIB_PATH .. "FHPrediction.lua", function() UpdateFHPred() end)
-        end
-    end
-
-  UpdateFHPred()
-
     if _G.KPrediction_Init then
       KPred = KPrediction()  
     else
@@ -5247,6 +5255,8 @@ function CaitlynMenu()
     Menu.Prediction:addParam("Choice", "Prediction Method", SCRIPT_PARAM_LIST, 1, {"VPrediction", "HPrediction", "FHPrediction", "KPrediction"})
     Menu.Prediction:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Prediction:addParam("Info", " Izsha & HTTF", SCRIPT_PARAM_INFO, "")
+    LoadPrediction(Menu.Prediction.Choice)
+    Menu.Prediction:setCallback("Choice", function(var) LoadPrediction(Menu.Prediction.Choice) end)
       
       Menu.Prediction:addSubMenu("VPrediction", "VPrediction")
       Menu.Prediction.VPrediction:addParam("Q", "Q Hitchance (2)", SCRIPT_PARAM_SLICE, 2, 1, 5, 1)
@@ -5514,6 +5524,24 @@ function OnTick()
 end
 
 ---------------------------------------------------------------------------------
+
+function LoadPrediction(choice)
+
+if choice == 3 then
+
+local function UpdateFHPred()
+
+        if FileExist(LIB_PATH .. "FHPrediction.lua") then
+          require("FHPrediction")    
+        else
+          DownloadFile("http://api.funhouse.me/download-lua.php", LIB_PATH .. "FHPrediction.lua", function() UpdateFHPred() end)
+        end
+    end
+
+  UpdateFHPred()
+
+end
+end
 
 function AlliesAround(Unit, range)
     local c=0
