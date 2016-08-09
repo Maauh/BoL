@@ -1,4 +1,4 @@
-local Version = 1.457
+local Version = 1.458
 local FileName = GetCurrentEnv().FILE_NAME
 local Debug = false
 
@@ -479,7 +479,7 @@ local function eChat()
   ChatOff = false
 end
 local ts = TargetSelector(TARGET_LESS_CAST, 1453, DAMAGE_PHYSICAL, true)
-local eRange, eSpeed, eDelay, eRadius = 1000, 2200, 0.30, nil
+local eRange, eSpeed, eDelay, eRadius = 950, 2000, 0.25, 0
 local ToInterrupt = {}
 local InterruptList = {
         ["KatarinaR"]         = {true, charName = "Katarina",  Spell = "R"},
@@ -1565,7 +1565,7 @@ function UseItemsCC(unit, scary)
         if scary then
           DelayAction(function()
             CastItem(Item.id)
-          end, Menu.Items.cc.delay/1000)  
+          end, Menu.Combo.delay/1000)  
           lastRemove = os.clock()
           return true
         end
