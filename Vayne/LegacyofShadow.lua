@@ -1,4 +1,4 @@
-local Version = 1.458
+local Version = 1.459
 local FileName = GetCurrentEnv().FILE_NAME
 local Debug = false
 
@@ -124,8 +124,9 @@ function(self,key)
 end
 
 if not VIP_USER then
-  print("<font color=\"#448DA6\"><b>[Vayne - Legacy of Shadow]</b></font> <font color=\"#F55F5F\"> Loading Failed. Required VIP.</font>")
-  return
+  DelayAction(function() print("<font color=\"#448DA6\"><b>[Vayne - Legacy of Shadow]</b></font> <font color=\"#FFB3B3\"> Welcome ".. GetUser() ..", Free Version Loaded.</font>") end, 3)
+else
+  DelayAction(function() print("<font color=\"#448DA6\"><b>[Vayne - Legacy of Shadow]</b></font> <font color=\"#FFB3B3\"> Welcome ".. GetUser() ..", VIP Version Loaded.</font>") end, 3)
 end
 
 ---------------------------------------------------------------------------------
@@ -656,7 +657,9 @@ function OnLoad()
   Variables()
   VayneMenu()
   DelayAction(function()LoadOrbwalk() end, 1)
+  if (VIP_USER) then
   DelayAction(function()AutoBuy()end, 3)
+  end
   Loaded = true
 end
 
@@ -664,7 +667,8 @@ end
 
 function Variables()
 
-  SACLoaded, PEWLoaded, MMALoaded, SxOrbLoaded = false, false, false, false
+  SACLoaded, PEWLoaded, MMALoaded, NOWLoaded = false, false, false, false
+  Combo, LaneClear, JungleClear, Harass, LastHit = nil, nil, nil, nil, nil, nil
 
   Foundinterrupt, FoundAGapCloser = false, false
   
@@ -785,6 +789,15 @@ function Variables()
       end
 UpdateFHPred()
 
+  local function UpdateNOW()
+
+        if FileExist(LIB_PATH .. "Nebelwolfi's Orb Walker.lua") then
+        else
+          DownloadFile("https://raw.githubusercontent.com/nebelwolfi/BoL/master/Common/Nebelwolfi's%20Orb%20Walker.lua", LIB_PATH .. "Nebelwolfi's Orb Walker.lua", function() UpdateNOW() end)
+        end
+      end
+UpdateNOW()
+
   for _, enemy in ipairs(GetEnemyHeroes()) do
     Wstacks[enemy.networkID] = 0
   end
@@ -798,16 +811,62 @@ end
 function VayneMenu()
 
     Menu = scriptConfig("Vayne - Legacy of Shadow", "VLOS_MAIN")
+
+    Menu:addSubMenu("Combo Settings", "Combo")
+    Menu.Combo:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
+    Menu.Combo:addParam("qforgap", "Use Q For Gapcloser", SCRIPT_PARAM_ONOFF, true)
+    Menu.Combo:addParam("qmethod", "Q Method", SCRIPT_PARAM_LIST, 1, {"AA Reset", "Passive Proc."})
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu.Combo:addParam("finishim", "Use E For Finisher", SCRIPT_PARAM_ONOFF, true)
+    Menu.Combo:addParam("fie", "Disable If X Enemy Around", SCRIPT_PARAM_SLICE, 2, 0, 5, 0)
+    Menu.Combo:addParam("fimh", "Disable If My Health < %X", SCRIPT_PARAM_SLICE, 0, 1, 100, 0)
+    Menu.Combo:addParam("fieh", "Disable If Enemy Health < %X", SCRIPT_PARAM_SLICE, 0, 1, 100, 0)
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu.Combo:addParam("R", "Use R", SCRIPT_PARAM_ONOFF, true)
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu.Combo:addParam("focus", "Left Click Focus Target", SCRIPT_PARAM_ONOFF, true)
+    if (VIP_USER) then
+    Menu.Combo:addParam("vision", "Auto vision on Bush", SCRIPT_PARAM_ONOFF, true)
+    end
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu.Combo:addParam("bork", "Use BoTRK & Bilgewater", SCRIPT_PARAM_ONOFF, true)
+    Menu.Combo:addParam("maxownhealth", "Max. own % Health to use", SCRIPT_PARAM_SLICE, 50, 1, 100, 0)
+    Menu.Combo:addParam("minenemyhealth", "Min. enemy % Health to use", SCRIPT_PARAM_SLICE, 20, 1, 100, 0)
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    if ignite then
+    Menu.Combo:addParam("set", "Use Ignite", SCRIPT_PARAM_LIST, 2, {"OFF", "Optimal", "Aggressive"})
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    end
+    if heal then
+    Menu.Combo:addParam("enable", "Use Heal", SCRIPT_PARAM_ONOFF, true)
+    Menu.Combo:addParam("health", "Use if My Health < %X", SCRIPT_PARAM_SLICE, 10, 0, 100, 0)
+    if realheals then
+    Menu.Combo:addParam("ally", "Use for Ally", SCRIPT_PARAM_ONOFF, false)
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    end
+    end
+    if exhaust then 
+    Menu.Combo:addParam("exh", "Exhaust Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey(exhaust.key))
+    Menu.Combo:addTS(TES)
+    TES = TargetSelector(TARGET_PRIORITY, 600, DAMAGE_MAGIC) 
+    TES.name = "Exhaust"
+    end 
+    Menu.Combo:addParam("Key", "Remove CC", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+    Menu.Combo:addParam("Always", "Remove Always", SCRIPT_PARAM_ONOFF, true) 
+    if SummonerSlot then
+    Menu.Combo:addParam("Summoner", "Use Cleanse", SCRIPT_PARAM_ONOFF, true)
+    end
+    Menu.Combo:addParam("delay", "Remove Delay(ms)", SCRIPT_PARAM_SLICE, 0, 0, 400, 0)
+    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu.Combo:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
     
-    Menu:addSubMenu("Key Binds", "Control")
-    Menu.Control:addParam("OnC", "Combo Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-    Menu.Control:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Control:addParam("OnF", "LaneClear Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
-    Menu.Control:addParam("OnJF", "JungleClear Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
-    Menu.Control:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Control:addParam("eafteraakey", "Condemn after Next AA", SCRIPT_PARAM_ONKEYTOGGLE, false, GetKey("E"))
-    Menu.Control:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Control:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
+    --Menu:addSubMenu("Key Binds", "Control")
+    --Menu.Control:addParam("burst", "Burst Harass Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("W"))
+    --Menu.Control:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu:addParam("eafteraakey", "Condemn after Next AA", SCRIPT_PARAM_ONKEYTOGGLE, false, GetKey("E"))
+    --Menu.Control:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    --Menu.Control:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
 
     Menu:addSubMenu("Wall-Condemn Settings", "Condemn")
     Menu.Condemn:addParam("wcdmethod", "Wall-Condemn Method", SCRIPT_PARAM_LIST, 1, {"Accurate", "More often"})
@@ -871,52 +930,6 @@ function VayneMenu()
     if not Foundinterrupt then Menu.extra:addParam("Blank", "Spell-Enemy to Interrupt Not Found.", SCRIPT_PARAM_INFO, "") end
     Menu.extra:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.extra:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
-   
-    Menu:addSubMenu("Combo Settings", "Combo")
-    Menu.Combo:addParam("Q", "Use Q", SCRIPT_PARAM_ONOFF, true)
-    Menu.Combo:addParam("qforgap", "Use Q For Gapcloser", SCRIPT_PARAM_ONOFF, true)
-    Menu.Combo:addParam("qmethod", "Q Method", SCRIPT_PARAM_LIST, 1, {"AA Reset", "Passive Proc."})
-    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Combo:addParam("finishim", "Use E For Finisher", SCRIPT_PARAM_ONOFF, true)
-    Menu.Combo:addParam("fie", "Disable If X Enemy Around", SCRIPT_PARAM_SLICE, 2, 0, 5, 0)
-    Menu.Combo:addParam("fimh", "Disable If My Health < %X", SCRIPT_PARAM_SLICE, 0, 1, 100, 0)
-    Menu.Combo:addParam("fieh", "Disable If Enemy Health < %X", SCRIPT_PARAM_SLICE, 0, 1, 100, 0)
-    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Combo:addParam("R", "Use R", SCRIPT_PARAM_ONOFF, true)
-    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Combo:addParam("focus", "Left Click Focus Target", SCRIPT_PARAM_ONOFF, true)
-    Menu.Combo:addParam("vision", "Auto vision on Bush", SCRIPT_PARAM_ONOFF, true)
-    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Combo:addParam("bork", "Use BoTRK & Bilgewater", SCRIPT_PARAM_ONOFF, true)
-    Menu.Combo:addParam("maxownhealth", "Max. own % Health to use", SCRIPT_PARAM_SLICE, 50, 1, 100, 0)
-    Menu.Combo:addParam("minenemyhealth", "Min. enemy % Health to use", SCRIPT_PARAM_SLICE, 20, 1, 100, 0)
-    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    if ignite then
-    Menu.Combo:addParam("set", "Use Ignite", SCRIPT_PARAM_LIST, 2, {"OFF", "Optimal", "Aggressive"})
-    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    end
-    if heal then
-    Menu.Combo:addParam("enable", "Use Heal", SCRIPT_PARAM_ONOFF, true)
-    Menu.Combo:addParam("health", "Use if My Health < %X", SCRIPT_PARAM_SLICE, 10, 0, 100, 0)
-    if realheals then
-    Menu.Combo:addParam("ally", "Use for Ally", SCRIPT_PARAM_ONOFF, false)
-    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    end
-    end
-    if exhaust then 
-    Menu.Combo:addParam("exh", "Exhaust Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey(exhaust.key))
-    Menu.Combo:addTS(TES)
-    TES = TargetSelector(TARGET_PRIORITY, 600, DAMAGE_MAGIC) 
-    TES.name = "Exhaust"
-    end 
-    Menu.Combo:addParam("Key", "Remove CC", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-    Menu.Combo:addParam("Always", "Remove Always", SCRIPT_PARAM_ONOFF, true) 
-    if SummonerSlot then
-    Menu.Combo:addParam("Summoner", "Use Cleanse", SCRIPT_PARAM_ONOFF, true)
-    end
-    Menu.Combo:addParam("delay", "Remove Delay(ms)", SCRIPT_PARAM_SLICE, 0, 0, 400, 0)
-    Menu.Combo:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Combo:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
     
     Menu:addSubMenu("Extra Ultimate Settings", "ultimate")
     Menu.ultimate:addParam("enemy", "Enemies in range for R", SCRIPT_PARAM_SLICE, 3, 1, 5, 0)
@@ -973,6 +986,7 @@ function VayneMenu()
     Menu.Draw:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Draw:addParam("Info1", " Izsha", SCRIPT_PARAM_INFO, "")
 
+    if (VIP_USER) then
     Menu:addSubMenu("Extra Settings", "extras")
     Menu.extras:addParam("buyme", "Auto Buy Starting Items", SCRIPT_PARAM_ONOFF, false)
     Menu.extras:addParam("Blank", "", SCRIPT_PARAM_INFO, "","" )
@@ -1000,6 +1014,7 @@ function VayneMenu()
     end
     Menu.extras:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.extras:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
+    end
   
     Menu:addSubMenu("Orbwalker Settings", "Orbwalker")
     Menu:addTS(ts)
@@ -1015,10 +1030,6 @@ function VayneMenu()
   Menu.Condemn:permaShow("wcdmethod")
   Menu.Combo:permaShow("qmethod")
 
-    Menu.Control.OnC = false
-    Menu.Control.OnF = false
-    Menu.Control.OnJF = false
-
 end
 
 ---------------------------------------------------------------------------------
@@ -1029,8 +1040,8 @@ function LoadOrbwalk()
     SACLoaded = true
     Menu.Orbwalker:addParam("Info", "SAC Detected & Loaded", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Orbwalker:addParam("Info", "Keys are not integrated with your", SCRIPT_PARAM_INFO, "")
-    Menu.Orbwalker:addParam("Info", "orbwalker, please set in Key Binds menu.", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Info", "Orbwalkers keys integrated with", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Info", "your orbwalker.", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
     ScriptMsg("Sida's Auto Carry Detected.")
@@ -1041,8 +1052,8 @@ function LoadOrbwalk()
     MMALoaded = true
     Menu.Orbwalker:addParam("Info", "MMA Detected & Loaded", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Orbwalker:addParam("Info", "Keys are not integrated with your", SCRIPT_PARAM_INFO, "")
-    Menu.Orbwalker:addParam("Info", "orbwalker, please set in Key Binds menu.", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Info", "Orbwalkers keys integrated with", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Info", "your orbwalker.", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
     ScriptMsg("Marksman's Mighty Assistant Detected.")
@@ -1050,23 +1061,58 @@ function LoadOrbwalk()
     PEWLoaded = true
     Menu.Orbwalker:addParam("Info", "Pewalk Detected & Loaded", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
-    Menu.Orbwalker:addParam("Info", "Keys are not integrated with your", SCRIPT_PARAM_INFO, "")
-    Menu.Orbwalker:addParam("Info", "orbwalker, please set in Key Binds menu.", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Info", "Orbwalkers keys integrated with", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Info", "your orbwalker.", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
     ScriptMsg("Pewalk Detected.")
-  elseif FileExist(LIB_PATH .. "SxOrbWalk.lua") then
-    require "SxOrbWalk"
-    SxOrb = SxOrbWalk()
-    SxOrb:LoadToMenu(Menu.Orbwalker)
+  elseif not (SACLoaded or PEWLoaded or MMALoaded) then
+    if FileExist(LIB_PATH .. "Nebelwolfi's Orb Walker.lua") then
+      require "Nebelwolfi's Orb Walker"
+      NebelwolfisOrbWalkerClass()
+    end
+    if _G.NebelwolfisOrbWalkerInit or _G.NebelwolfisOrbWalkerLoaded then
+    NOWLoaded = true
+    Menu.Orbwalker:addParam("Info", "NebelwolfisOrbWalker Loaded.", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Info", "Orbwalkers keys integrated with", SCRIPT_PARAM_INFO, "")
+    Menu.Orbwalker:addParam("Info", "your orbwalker.", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Blank", "", SCRIPT_PARAM_INFO, "")
     Menu.Orbwalker:addParam("Info", " Izsha", SCRIPT_PARAM_INFO, "")
-    SxOrbLoaded = true
-    ScriptMsg("Optional orbwalker not found, SxOrbwalk Loaded.")
+    ScriptMsg("NebelwolfisOrbWalker Loaded.")
+    end
   else
     ErrorMsg("WARNING:Orbwalker Not Found!")
   end
   
+end
+
+function InitMode()
+    if SACLoaded then
+        Combo = _G.AutoCarry.Keys.AutoCarry
+        Harass = _G.AutoCarry.Keys.MixedMode
+        LaneClear = _G.AutoCarry.Keys.LaneClear
+        JungleClear = _G.AutoCarry.Keys.LaneClear
+        LastHit = _G.AutoCarry.Keys.LastHit
+    elseif MMALoaded then
+        Combo = _G.MMA_IsOrbwalking
+        Harass = _G.MMA_IsDualCarrying
+        LaneClear = _G.MMA_IsLaneClearing
+        JungleClear =  _G.MMA_IsLaneClearing
+        LastHit = _G.MMA_IsLastHitting
+    elseif PEWLoaded then
+        Combo = _G._Pewalk.GetActiveMode().Carry
+        Harass = _G._Pewalk.GetActiveMode().Mixed
+        LaneClear = _G._Pewalk.GetActiveMode().LaneClear
+        JungleClear = _G._Pewalk.GetActiveMode().LaneClear
+        LastHit = _G._Pewalk.GetActiveMode().Farm
+    elseif NOWLoaded then
+        Combo = _G.NebelwolfisOrbWalker.Config.k.Combo
+        Harass = _G.NebelwolfisOrbWalker.Config.k.Harass
+        LaneClear = _G.NebelwolfisOrbWalker.Config.k.LaneClear
+        JungleClear = _G.NebelwolfisOrbWalker.Config.k.LaneClear
+        LastHit = _G.NebelwolfisOrbWalker.Config.k.LastHit
+    end
 end
 
 ---------------------------------------------------------------------------------
@@ -1080,20 +1126,17 @@ function OnTick()
     return
   end
   
+  InitMode()
   Checks()
   Targets()
   
-  if Menu.Control.OnC and Menu.Combo.vision then
+  if Combo and Menu.Combo.vision then
     Bushfind()
   end
   
   if Menu.extras.UseAutoLevelFirst or Menu.extras.UseAutoLevelRest then
     CheckLevelChange()
     LevelUpSpell()
-  end
-  
-  if Menu.Control.OnE then
-    Flee()
   end
 
   if Menu.popup then
@@ -1107,13 +1150,13 @@ function OnTick()
     eChat()
   end
 
-  if Menu.Control.OnC and Menu.Condemn.wcdmethod == 1 then
+  if Combo and Menu.Condemn.wcdmethod == 1 then
     WallCondemnMultiPrediction()
-  elseif Menu.Control.OnC and Menu.Condemn.wcdmethod == 2 then
+  elseif Combo and Menu.Condemn.wcdmethod == 2 then
     WallCondemn()
   end
 
-  if Menu.JFarm.E and Menu.Control.OnJF then
+  if Menu.JFarm.E and JungleClear then
     JungleWallCondemnMultiPrediction()
   end
 
@@ -1139,7 +1182,7 @@ function OnTick()
   end 
   
   if EnemiesAround(myHero, 600) >= Menu.ultimate.enemy and AlliesAround(myHero, 600) >= Menu.ultimate.ally and (math.floor(myHero.health / myHero.maxHealth * 100)) <= Menu.ultimate.hp then
-    if Menu.Combo.R and Menu.Control.OnC then
+    if Menu.Combo.R and Combo then
         if R.ready and not ActiveR then
            CastSpell(_R)
         end
@@ -1224,8 +1267,8 @@ function Targets()
         target_return = _G.AutoCarry.Crosshair:GetTarget()
     elseif _G._Pewalk then 
         target_return = _G._Pewalk.GetTarget()
-    elseif SxOrbLoaded then
-        target_return = SxOrb:GetTarget()
+    elseif NOWLoaded then
+        target_return = _G.NebelwolfisOrbWalker:GetTarget()
     end
 
     if ValidTarget(target_return) and target_return.type == myHero.type then
@@ -1299,8 +1342,8 @@ function BlockAA(bool)
             _G.MMA_StopAttacks(false)
         elseif SACLoaded then
             _G.AutoCarry.MyHero:AttacksEnabled(true)
-        elseif SxOrbLoaded then
-            _G.SxOrb:EnableAttacks()
+        elseif NOWLoaded then
+            _G.NebelwolfisOrbWalker:SetAA(true)
         elseif PEWLoaded then
             _G._Pewalk.AllowAttack(true)
         end
@@ -1309,8 +1352,8 @@ function BlockAA(bool)
             _G.MMA_StopAttacks(true)
         elseif SACLoaded then
             _G.AutoCarry.MyHero:AttacksEnabled(false)
-        elseif SxOrbLoaded then
-            _G.SxOrb:DisableAttacks()
+        elseif NOWLoaded then
+            _G.NebelwolfisOrbWalker:SetAA(false)
         elseif PEWLoaded then
             _G._Pewalk.AllowAttack(false)
         end
@@ -1322,9 +1365,9 @@ function OrbwalkCanAttack()
   if SACLoaded then
     return _G.AutoCarry.Orbwalker:CanShoot()
   elseif MMALoaded then
-    return true--_G.MMA_AttackAvailable
-  elseif SxOrbLoaded then
-    return SxOrb:CanAttack()
+    return _G.MMA_CanAttack
+  elseif NOWLoaded then
+    return _G.NebelwolfisOrbWalker:TimeToAttack()
   elseif PEWLoaded then
     return _Pewalk.CanAttack()
   end
@@ -1855,36 +1898,42 @@ end
 
 function OnProcessAttack(unit, spell)
 
-  if unit.isMe and spell.name:lower():find("attack") and Menu.Control.OnC and Menu.Combo.Q and Q.ready and Menu.Combo.qmethod == 1 then
+  if unit.isMe and spell.name:lower():find("attack") and Combo and Menu.Combo.Q and Q.ready and Menu.Combo.qmethod == 1 then
         SpellTarget = spell.target
         if SpellTarget.type == myHero.type then
             CastSpell(_Q, mousePos.x, mousePos.z)
         end
     end
 
-  if Menu.Control.OnF and Q.ready then
+  if LaneClear and Q.ready then
       EnemyMinions:update()
         for i, minion in pairs(EnemyMinions.objects) do   
-  if unit.isMe and spell.name:lower():find("attack") and Menu.Control.OnF and Menu.Farm.Q and ManaPercent() >= Menu.Farm.Q2 and not(Menu.Farm.Q3 and OrbwalkCanAttack()) then
+  if unit.isMe and spell.name:lower():find("attack") and LaneClear and Menu.Farm.Q and ManaPercent() >= Menu.Farm.Q2 and not(Menu.Farm.Q3 and OrbwalkCanAttack()) then
         SpellTarget = spell.target
         CastSpell(_Q, mousePos.x, mousePos.z)
        end
       end
     end
 
-   if unit.isMe and spell.name:lower():find("attack") and Menu.Control.OnC and Menu.Combo.Q and Q.ready and Menu.Combo.qmethod == 2 then
+   if unit.isMe and spell.name:lower():find("attack") and Combo and Menu.Combo.Q and Q.ready and Menu.Combo.qmethod == 2 then
         SpellTarget = spell.target
         if SpellTarget.type == myHero.type and Wstacks[SpellTarget.networkID] == 1 then
             CastSpell(_Q, mousePos.x, mousePos.z)
         end
     end
 
+    if unit.isMe and spell.name:lower():find("attack") and Harass then
+        SpellTarget = spell.target
+        if SpellTarget.type == myHero.type and Wstacks[SpellTarget.networkID] == 1 and Q.ready and E.ready then
+            CastSpell(_Q, mousePos.x, mousePos.z)
+            DelayAction(function() CastSpell(_E, SpellTarget) end, spell.windUpTime + GetLatency()/2000)
+        end
+    end
 
-
-   if Menu.Control.OnF and Q.ready then
+   if LaneClear and Q.ready then
       EnemyMinions:update()
         for i, minion in pairs(EnemyMinions.objects) do   
-  if unit.isMe and spell.name:lower():find("attack") and Menu.Control.OnF and Menu.Farm.Q and ManaPercent() >= Menu.Farm.Q2 then
+  if unit.isMe and spell.name:lower():find("attack") and LaneClear and Menu.Farm.Q and ManaPercent() >= Menu.Farm.Q2 then
         SpellTarget = spell.target
         CastSpell(_Q, mousePos.x, mousePos.z)
        end
@@ -1892,7 +1941,7 @@ function OnProcessAttack(unit, spell)
 
       JungleMobs:update()
          for i, junglemob in pairs(JungleMobs.objects) do
-        if unit.isMe and spell.name:lower():find("attack") and Menu.Control.OnJF and Menu.JFarm.Q and ManaPercent() >= Menu.JFarm.Q2 then
+        if unit.isMe and spell.name:lower():find("attack") and JungleClear and Menu.JFarm.Q and ManaPercent() >= Menu.JFarm.Q2 then
         SpellTarget = spell.target
         CastSpell(_Q, mousePos.x, mousePos.z)
       end
@@ -1901,9 +1950,9 @@ function OnProcessAttack(unit, spell)
 
   if unit.isMe and spell.name:lower():find("attack") then
         if spell.target then SpellTarget = spell.target end
-        if Menu.Control.eafteraakey and SpellTarget.type == myHero.type and E.ready then
+        if Menu.eafteraakey and SpellTarget.type == myHero.type and E.ready then
             DelayAction(function() CastSpell(_E, SpellTarget) end, spell.windUpTime + GetLatency()/2000)
-            Menu.Control.eafteraakey = false
+            Menu.eafteraakey = false
         else
             DelayAction(function() CastSpell(_Q, SpellTarget) end, spell.windUpTime + GetLatency()/2000)
         end
@@ -1912,7 +1961,7 @@ function OnProcessAttack(unit, spell)
 if not (EnemiesAround(myHero, 650) >= Menu.Combo.fie and (math.floor(myHero.health / myHero.maxHealth * 100)) <= Menu.Combo.fimh and (math.floor(enemyHero.health / enemyHero.maxHealth * 100)) <= Menu.Combo.fieh) then
   if unit.isMe and spell.name:lower():find("attack") then
   if spell.target then SpellTarget = spell.target end
-    if Menu.Control.OnC and Menu.Combo.finishim and SpellTarget.type == myHero.type and E.ready then
+    if Combo and Menu.Combo.finishim and SpellTarget.type == myHero.type and E.ready then
       for i, enemy in ipairs(EnemyHeroes) do
           if GetDmg("E", enemy) >= enemy.health then
             CastSpell(_E, SpellTarget)
@@ -1930,7 +1979,7 @@ end
 
 if unit.isMe and spell.name:lower():find("attack") then
         if spell.target then SpellTarget = spell.target end
-        if Menu.Combo.qforgap and SpellTarget.type == myHero.type and Q.ready and GetDistance(SpellTarget) > 650 and Menu.Control.OnC then
+        if Menu.Combo.qforgap and SpellTarget.type == myHero.type and Q.ready and GetDistance(SpellTarget) > 650 and Combo then
         DelayAction(function() CastSpell(_Q, SpellTarget) end, spell.windUpTime + GetLatency()/2000)
   end
 end
@@ -1985,13 +2034,13 @@ function WallCondemnMultiPrediction()
       
       if InsideTheWall then
           
-        if Menu.Draw.CondemnAssistant and Menu.Control.OnC and E.ready then
+        if Menu.Draw.CondemnAssistant and Combo and E.ready then
         DrawLine3D(enemyHero.x, enemyHero.y, enemyHero.z, checksPos.x, checksPos.y, checksPos.z, 2, 0xFFFF0000) -- Here OnDraw() if need <-- Disabled
         end
       else
         AllInsideWall = false
         
-        if Menu.Draw.CondemnAssistant and Menu.Control.OnC and E.ready then
+        if Menu.Draw.CondemnAssistant and Combo and E.ready then
         DrawLine3D(enemyHero.x, enemyHero.y, enemyHero.z, checksPos.x, checksPos.y, checksPos.z, 2, 0xFF00FF00) -- Here OnDraw() if need <-- Disabled
         end
       end
@@ -2059,7 +2108,7 @@ function JungleWallCondemnMultiPrediction()
     if myHero.dead then return end
     if myHero.level > Menu.JFarm.E3 then return end
   
-    if E.ready and Menu.Control.OnJF and Menu.JFarm.E and ManaPercent() >= Menu.JFarm.E2 then
+    if E.ready and JungleClear and Menu.JFarm.E and ManaPercent() >= Menu.JFarm.E2 then
       if (myHero.health/myHero.maxHealth)*100 >= Menu.JFarm.hpm then
 
     for i, junglemob in pairs(JungleMobs.objects) do
@@ -2103,14 +2152,14 @@ function JungleWallCondemnMultiPrediction()
       
       if InsideTheWall then
           
-        if Menu.Draw.CondemnAssistant and Menu.Control.OnJF and E.ready then
-        DrawLine3D(junglemob.x, junglemob.y, junglemob.z, checksPos.x, checksPos.y, checksPos.z, 2, 0xFFFF0000) -- Will move to OnDraw() if need
+        if Menu.Draw.CondemnAssistant and JungleClear and E.ready then
+        DrawLine3D(LargeJunglemob.x, LargeJunglemob.y, LargeJunglemob.z, checksPos.x, checksPos.y, checksPos.z, 1, 0xFFFF0000) -- Will move to OnDraw() if need
         end
       else
         AllInsideWall = false
         
-        if Menu.Draw.CondemnAssistant and Menu.Control.OnJF and E.ready then
-        DrawLine3D(junglemob.x, junglemob.y, junglemob.z, checksPos.x, checksPos.y, checksPos.z, 2, 0xFF00FF00) -- Will move to OnDraw() if need
+        if Menu.Draw.CondemnAssistant and JungleClear and E.ready then
+        DrawLine3D(LargeJunglemob.x, LargeJunglemob.y, LargeJunglemob.z, checksPos.x, checksPos.y, checksPos.z, 1, 0xFF00FF00) -- Will move to OnDraw() if need
         end
       end
 
@@ -2177,9 +2226,9 @@ function OnDraw()
               DrawTextA(tostring("Latest Changelog (" .. Version .. ") ;"), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.229), ARGB(255, 0, 222, 225))
               DrawTextA(tostring(" "), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.210), ARGB(255, 255, 255, 255))
               DrawTextA(tostring(" "), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.225), ARGB(255, 255, 255, 255))
-              DrawTextA(tostring("- SAC:R Vayne plugin will be disabled now if SAC:R loaded."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.259), ARGB(255, 0, 222, 225))
-              DrawTextA(tostring(""), WINDOW_H*.015, (WINDOW_W/2.70), (WINDOW_H*.260), ARGB(255, 0, 222, 225))
-              DrawTextA(tostring(""), WINDOW_H*.015, (WINDOW_W/2.70), (WINDOW_H*.280), ARGB(255, 0, 222, 225))
+              DrawTextA(tostring("- Orbwalker's Keys now fully integrated."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.260), ARGB(255, 0, 222, 225))
+              DrawTextA(tostring("- Enabled and optimized for free users."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.280), ARGB(255, 0, 222, 225))
+              DrawTextA(tostring("- A few minor bugs fixed."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.300), ARGB(255, 0, 222, 225))
               local w, h1, h2 = (WINDOW_W*0.49), (WINDOW_H*.70), (WINDOW_H*.75)
               DrawLine(w, h1/1.775, w, h2/1.68, w*.11, ARGB(255, 0, 0, 0))
               DrawRectangleButton(WINDOW_W*0.467, WINDOW_H/2.375, WINDOW_W*.047, WINDOW_H*.041, ARGB(255, 255, 0, 0))
@@ -2240,7 +2289,7 @@ function OnDraw()
   
   end
 
-  if Menu.Draw.CondemnAssistant and Menu.Control.OnC and E.ready and Menu.Condemn.wcdmethod == 1 then
+  if Menu.Draw.CondemnAssistant and Combo and E.ready and Menu.Condemn.wcdmethod == 1 then
     for i, enemyHero in ipairs(EnemyHeroes) do
         if Menu.Condemn["enableCondemn"..i] then
         if enemyHero ~= nil and enemyHero.valid and not enemyHero.dead and enemyHero.visible and GetDistance(enemyHero) <= 715 and GetDistance(enemyHero) > 0 then
@@ -2275,14 +2324,14 @@ function OnDraw()
       
       if InsideTheWall then
           
-        if Menu.Draw.CondemnAssistant and Menu.Control.OnC and E.ready then
+        if Menu.Draw.CondemnAssistant and Combo and E.ready then
         DrawLine3D(enemyHero.x, enemyHero.y, enemyHero.z, checksPos.x, checksPos.y, checksPos.z, 1, 0xFF00FF00)
         DrawCircle3D(checksPos.x, checksPos.y, checksPos.z, 20, 1, ARGB(0xFF, 0, 0xFF, 0))
         end
       else
         AllInsideWall = false
         
-        if Menu.Draw.CondemnAssistant and Menu.Control.OnC and E.ready then
+        if Menu.Draw.CondemnAssistant and Combo and E.ready then
         DrawLine3D(enemyHero.x, enemyHero.y, enemyHero.z, checksPos.x, checksPos.y, checksPos.z, 2, 0xFF000000)
         DrawCircle3D(checksPos.x, checksPos.y, checksPos.z, 20, 1, ARGB(0xFF, 0x00, 0x00, 0x00))
         end
@@ -2297,7 +2346,7 @@ function OnDraw()
     end   
   end
 
-if Menu.Draw.CondemnAssistant and Menu.Control.OnC and E.ready and Menu.Condemn.wcdmethod == 2 then
+if Menu.Draw.CondemnAssistant and Combo and E.ready and Menu.Condemn.wcdmethod == 2 then
             for i, enemyHero in ipairs(EnemyHeroes) do
                 if Menu.Condemn["enableCondemn"..i] then 
                     if enemyHero ~= nil and enemyHero.valid and not enemyHero.dead and enemyHero.visible and GetDistance(enemyHero) <= 715 and GetDistance(enemyHero) > 0 then
@@ -2331,7 +2380,7 @@ if Menu.Draw.CondemnAssistant and Menu.Control.OnC and E.ready and Menu.Condemn.
         end
     end
 
-  if E.ready and Menu.Control.eafteraakey then
+  if E.ready and Menu.eafteraakey then
     local myPos = WorldToScreen(D3DXVECTOR3(myHero.x, myHero.y, myHero.z))
     DrawText("Condemn After Next AA is Active!", 30, myPos.x, myPos.y, ARGB(0xFF, 0, 0, 0xFF))
   end
@@ -2362,6 +2411,10 @@ end
 ---------------------------------------------------------------------------------
 
 function AutoBuy()
+
+if not (VIP_USER) then
+  return
+end
   
   if GetGameTimer() < 60 then
     if Menu.extras.buyme then
@@ -2379,6 +2432,11 @@ end
 ---------------------------------------------------------------------------------
 
 function CheckLevelChange()
+
+if not (VIP_USER) then
+  return
+end
+
     if LastLevelCheck + 250 < GetTickCount() and myHero.level < 19 then
         if GetGame().map.index == 8 and myHero.level < 4 and Menu.extras.UseAutoLevelFirst then
             LevelSpell(_Q)
@@ -2395,6 +2453,11 @@ function CheckLevelChange()
 end
 
 function LevelUpSpell()
+
+  if not (VIP_USER) then
+  return
+end
+
     if Menu.extras.UseAutoLevelFirst and myHero.level < 4 then
         LevelSpell(AutoLevelSpellTable[AutoLevelSpellTable["SpellOrder"][Menu.extras.First3Level]][myHero.level])
     end
@@ -2407,6 +2470,10 @@ end
 ---------------------------------------------------------------------------------
 
 function OnBush()
+
+  if not (VIP_USER) then
+  return
+end
 
 local WardSlot = nil
   if GetInventorySlotItem(2045) ~= nil and myHero:CanUseSpell(GetInventorySlotItem(2045)) == READY then
@@ -2431,6 +2498,10 @@ local WardSlot = nil
 end
 
 function FindBush(x0, y0, z0, maxRadius, precision)
+
+  if not (VIP_USER) then
+  return
+end
 
     local vec = D3DXVECTOR3(x0, y0, z0)
     precision = precision or 50
@@ -2463,6 +2534,11 @@ function FindBush(x0, y0, z0, maxRadius, precision)
 end
 
 function Bushfind()
+
+  if not (VIP_USER) then
+  return
+end
+
   if lastTime +15 > os.clock() then return end
   for _,c in pairs(GetEnemyHeroes()) do   
     if not c.dead and not c.visible then
