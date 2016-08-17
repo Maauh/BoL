@@ -1,4 +1,4 @@
-local Version = 1.459
+local Version = 1.461
 local FileName = GetCurrentEnv().FILE_NAME
 local Debug = false
 
@@ -761,24 +761,6 @@ function Variables()
     }
   end
 
-  if _G.VPrediction_Init then
-      VPred = VPrediction()  
-    else
-
-    local function UpdateVPred()
-
-        if FileExist(LIB_PATH .. "VPrediction.lua") then
-          require("VPrediction")
-          VPred = VPrediction()    
-        else
-          DownloadFile("https://raw.githubusercontent.com/SidaBoL/Scripts/master/Common/VPrediction.lua", LIB_PATH .. "VPrediction.lua", function() UpdateVPred() end)
-        end
-
-      end
-
-     UpdateVPred()
-  end
-
   local function UpdateFHPred()
 
         if FileExist(LIB_PATH .. "FHPrediction.lua") then
@@ -1137,6 +1119,7 @@ function OnTick()
   if Menu.extras.UseAutoLevelFirst or Menu.extras.UseAutoLevelRest then
     CheckLevelChange()
     LevelUpSpell()
+    LevelUpSpellFirst()
   end
 
   if Menu.popup then
@@ -1534,7 +1517,7 @@ function AProc(unit, spell)
       if myHero:CanUseSpell(heal) == 0 and spell.target.isMe then
         local realDamage = unit.totalDamage / (((myHero.armor * 0.7) / 100) + 1)
 
-        if VPred:GetPredictedHealth(myHero, 0.5) + myHero.shield <= realDamage * tDamage then
+        if FHPrediction.PredictHealth(myHero, 0.5) + myHero.shield <= realDamage * tDamage then
           DelayAction(function()
             CastSpell(heal)
             ScriptMsg("Saving from tower")
@@ -1729,7 +1712,7 @@ function CountAlliesNearUnit(unit, range)
 end
 
 function isFleeingFromMe(target, range)
-  local pos = VPred:GetPredictedPos(target, 0.26)
+  local pos = FHPrediction.PredictPosition(target, 0.26)
   
   if pos and GetDistanceSqr(pos) > range*range then
     return true
@@ -1737,7 +1720,7 @@ function isFleeingFromMe(target, range)
   return false
 end
 function amIFleeing(target, range)
-  local pos = VPred:GetPredictedPos(myHero, 0.26)
+  local pos = FHPrediction.PredictPosition(myHero, 0.26)
   
   if pos and GetDistanceSqr(pos, target) > range*range then
     return true
@@ -1922,13 +1905,13 @@ function OnProcessAttack(unit, spell)
         end
     end
 
-    if unit.isMe and spell.name:lower():find("attack") and Harass then
+    --[[if unit.isMe and spell.name:lower():find("attack") and Harass then
         SpellTarget = spell.target
         if SpellTarget.type == myHero.type and Wstacks[SpellTarget.networkID] == 1 and Q.ready and E.ready then
             CastSpell(_Q, mousePos.x, mousePos.z)
             DelayAction(function() CastSpell(_E, SpellTarget) end, spell.windUpTime + GetLatency()/2000)
         end
-    end
+    end]]--
 
    if LaneClear and Q.ready then
       EnemyMinions:update()
@@ -1958,18 +1941,21 @@ function OnProcessAttack(unit, spell)
         end
   end
 
-if not (EnemiesAround(myHero, 650) >= Menu.Combo.fie and (math.floor(myHero.health / myHero.maxHealth * 100)) <= Menu.Combo.fimh and (math.floor(enemyHero.health / enemyHero.maxHealth * 100)) <= Menu.Combo.fieh) then
-  if unit.isMe and spell.name:lower():find("attack") then
-  if spell.target then SpellTarget = spell.target end
-    if Combo and Menu.Combo.finishim and SpellTarget.type == myHero.type and E.ready then
-      for i, enemy in ipairs(EnemyHeroes) do
-          if GetDmg("E", enemy) >= enemy.health then
-            CastSpell(_E, SpellTarget)
-          elseif Wstacks[SpellTarget.networkID] == 2 then
+
+for i, enemy in ipairs(EnemyHeroes) do
+  if not (EnemiesAround(myHero, 650) >= Menu.Combo.fie and (math.floor(myHero.health / myHero.maxHealth * 100)) <= Menu.Combo.fimh and (math.floor(enemyHero.health / enemyHero.maxHealth * 100)) <= Menu.Combo.fieh) then
+    if unit.isMe and spell.name:lower():find("attack") then
+      if spell.target then SpellTarget = spell.target end
+        if Combo and Menu.Combo.finishim and SpellTarget.type == myHero.type and E.ready then
+          for i, enemy in ipairs(EnemyHeroes) do
+            if GetDmg("E", enemy) >= enemy.health then
+              CastSpell(_E, SpellTarget)
+            elseif Wstacks[SpellTarget.networkID] == 2 then
             if GetDmg("E", enemy)+GetDmg("W", enemy) >= enemy.health then
             CastSpell(_E, SpellTarget)
-          else
+            else
             DelayAction(function() CastSpell(_Q, SpellTarget) end, spell.windUpTime + GetLatency()/2000)
+            end
           end
         end
       end
@@ -2226,9 +2212,9 @@ function OnDraw()
               DrawTextA(tostring("Latest Changelog (" .. Version .. ") ;"), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.229), ARGB(255, 0, 222, 225))
               DrawTextA(tostring(" "), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.210), ARGB(255, 255, 255, 255))
               DrawTextA(tostring(" "), WINDOW_H*.018, (WINDOW_W/2.65), (WINDOW_H*.225), ARGB(255, 255, 255, 255))
-              DrawTextA(tostring("- Orbwalker's Keys now fully integrated."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.260), ARGB(255, 0, 222, 225))
-              DrawTextA(tostring("- Enabled and optimized for free users."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.280), ARGB(255, 0, 222, 225))
-              DrawTextA(tostring("- A few minor bugs fixed."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.300), ARGB(255, 0, 222, 225))
+              DrawTextA(tostring("- Fixed an issue to cause error spam when Vayne died."), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.260), ARGB(255, 0, 222, 225))
+              DrawTextA(tostring(""), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.280), ARGB(255, 0, 222, 225))
+              DrawTextA(tostring(""), WINDOW_H*.016, (WINDOW_W/2.70), (WINDOW_H*.300), ARGB(255, 0, 222, 225))
               local w, h1, h2 = (WINDOW_W*0.49), (WINDOW_H*.70), (WINDOW_H*.75)
               DrawLine(w, h1/1.775, w, h2/1.68, w*.11, ARGB(255, 0, 0, 0))
               DrawRectangleButton(WINDOW_W*0.467, WINDOW_H/2.375, WINDOW_W*.047, WINDOW_H*.041, ARGB(255, 255, 0, 0))
@@ -2293,7 +2279,7 @@ function OnDraw()
     for i, enemyHero in ipairs(EnemyHeroes) do
         if Menu.Condemn["enableCondemn"..i] then
         if enemyHero ~= nil and enemyHero.valid and not enemyHero.dead and enemyHero.visible and GetDistance(enemyHero) <= 715 and GetDistance(enemyHero) > 0 then
-        local predPosition = FHPrediction.PredictPosition(enemyHero, eDelay) --VPred:GetPredictedPos(enemyHero, eDelay, eSpeed)
+        local predPosition = FHPrediction.PredictPosition(enemyHero, eDelay)
       
       if predPosition and not IsWall(D3DXVECTOR3(predPosition.x, predPosition.y, predPosition.z)) then
           
@@ -2438,15 +2424,11 @@ if not (VIP_USER) then
 end
 
     if LastLevelCheck + 250 < GetTickCount() and myHero.level < 19 then
-        if GetGame().map.index == 8 and myHero.level < 4 and Menu.extras.UseAutoLevelFirst then
-            LevelSpell(_Q)
-            LevelSpell(_W)
-            LevelSpell(_E)
-        end
 
         LastLevelCheck = GetTickCount()
         if myHero.level ~= LastHeroLevel then
-            DelayAction(function() LevelUpSpell() end, 0.25)
+            DelayAction(function() LevelUpSpell() end, 0.35)
+            DelayAction(function() LevelUpSpellFirst() end, 0.35)
             LastHeroLevel = myHero.level
         end
     end
@@ -2458,13 +2440,29 @@ function LevelUpSpell()
   return
 end
 
-    if Menu.extras.UseAutoLevelFirst and myHero.level < 4 then
+  if myHero.level < 4 then 
+    return
+  end
+
+    if Menu.extras.UseAutoLevelRest then
+        LevelSpell(AutoLevelSpellTable[AutoLevelSpellTable["SpellOrder"][Menu.extras.RestLevel]][myHero.level])
+    end
+end
+
+function LevelUpSpellFirst()
+
+  if not (VIP_USER) then
+  return
+end
+
+  if myHero.level > 3 then 
+    return
+  end
+
+    if Menu.extras.UseAutoLevelFirst then
         LevelSpell(AutoLevelSpellTable[AutoLevelSpellTable["SpellOrder"][Menu.extras.First3Level]][myHero.level])
     end
 
-    if Menu.extras.UseAutoLevelRest and myHero.level > 3 then
-        LevelSpell(AutoLevelSpellTable[AutoLevelSpellTable["SpellOrder"][Menu.extras.RestLevel]][myHero.level])
-    end
 end
 
 ---------------------------------------------------------------------------------
