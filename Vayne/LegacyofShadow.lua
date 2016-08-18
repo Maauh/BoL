@@ -1,4 +1,4 @@
-local Version = 1.461
+local Version = 1.462
 local FileName = GetCurrentEnv().FILE_NAME
 local Debug = false
 
@@ -499,25 +499,26 @@ local InterruptList = {
         ["InfiniteDuress"]        = {true, charName = "Warwick",   Spell = "R"},
         ["LucianR"]           = {true, charName = "Lucian",    Spell = "R"},
         ["VelkozR"]           = {true, charName = "Velkoz",    Spell = "R"},
-        ["CaitlynAceintheHole"]           = {true, charName = "Caitlyn",    Spell = "R"}
+        ["ReapTheWhirlwind"]           = {true, charName = "Janna",    Spell = "R"}, --
+        ["MasterYi"]           = {true, charName = "MasterYi",    Spell = "W"} --
     }
 
 local GapCloserList = {
-        ["AkaliShadowDance"]    = {true, charName = "Akali",     Spell = "R"},
-        ["Headbutt"]          = {true, charName = "Alistar",   Spell = "W"},
-        ["DianaTeleport"]         = {true, charName = "Diana",     Spell = "R"},
-        ["IreliaGatotsu"]         = {true, charName = "Irelia",    Spell = "Q"},
-        ["JaxLeapStrike"]           = {true, charName = "Jax",     Spell = "Q"},
-        ["JayceToTheSkies"]         = {true, charName = "Jayce",   Spell = "Q"},
-        ["MaokaiUnstableGrowth"]    = {true, charName = "Maokai",    Spell = "W"},
-        ["MonkeyKingNimbus"]      = {true, charName = "MonkeyKing",  Spell = "E"},
-        ["Pantheon_LeapBash"]     = {true, charName = "Pantheon",  Spell = "W"},
-        ["PoppyHeroicCharge"]       = {true, charName = "Poppy",   Spell = "E"},
-        ["QuinnE"]            = {true, charName = "Quinn",   Spell = "E"},
-        ["XenZhaoSweep"]        = {true, charName = "XinZhao",   Spell = "E"},
-        ["blindmonkqtwo"]       = {true, charName = "LeeSin",    Spell = "Q"},
-        ["FizzPiercingStrike"]      = {true, charName = "Fizz",    Spell = "Q"},
-        ["RengarLeap"]          = {true, charName = "Rengar",    Spell = "AA"},
+        ["AkaliShadowDance"]    = {true, charName = "Akali",    range = 800,   projSpeed = 2200, Spell = "R"},
+        ["Headbutt"]          = {true, charName = "Alistar",    range = 650,   projSpeed = 2200, Spell = "W"},
+        ["DianaTeleport"]         = {true, charName = "Diana",    range = 825,   projSpeed = 2000, Spell = "R"},
+        ["IreliaGatotsu"]         = {true, charName = "Irelia",    range = 650,   projSpeed = 2200, Spell = "Q"},
+        ["JaxLeapStrike"]           = {true, charName = "Jax",    range = 700,   projSpeed = 2000, Spell = "Q"},
+        ["JayceToTheSkies"]         = {true, charName = "Jayce",    range = 600,   projSpeed = 2000, Spell = "Q"},
+        ["MaokaiUnstableGrowth"]    = {true, charName = "Maokai",    range = 525,   projSpeed = 2000, Spell = "W"},
+        ["MonkeyKingNimbus"]      = {true, charName = "MonkeyKing",    range = 650,   projSpeed = 2200, Spell = "E"},
+        ["Pantheon_LeapBash"]     = {true, charName = "Pantheon",    range = 600,   projSpeed = 2000, Spell = "W"},
+        ["PoppyHeroicCharge"]       = {true, charName = "Poppy",    range = 525,   projSpeed = 2000, Spell = "E"},
+        ["QuinnE"]            = {true, charName = "Quinn",    range = 375,   projSpeed = 1800, Spell = "E"},
+        ["XenZhaoSweep"]        = {true, charName = "XinZhao",    range = 650,   projSpeed = 2000, Spell = "E"},
+        ["blindmonkqtwo"]       = {true, charName = "LeeSin",    range = 600,   projSpeed = 1800, Spell = "Q"},
+        ["FizzPiercingStrike"]      = {true, charName = "Fizz",    range = 550,   projSpeed = 2000, Spell = "Q"},
+        ["RengarLeap"]          = {true, charName = "Rengar",    range = 525,   projSpeed = 2000, Spell = "AA"},
         ["AatroxQ"]         = {true, charName = "Aatrox",    range = 1000,   projSpeed = 1200, Spell = "Q"},
         ["GragasE"]         = {true, charName = "Gragas",    range = 600,    projSpeed = 2000, Spell = "E"},
         ["GravesMove"]        = {true, charName = "Graves",    range = 425,    projSpeed = 2000, Spell = "E"},
@@ -529,12 +530,21 @@ local GapCloserList = {
         ["LeblancSlide"]      = {true, charName = "Leblanc",   range = 600,    projSpeed = 2000, Spell = "W"},
         ["LeblancSlideM"]     = {true, charName = "Leblanc",   range = 600,    projSpeed = 2000, Spell = "WMimic"},
         ["LeonaZenithBlade"]    = {true, charName = "Leona",     range = 900,    projSpeed = 2000, Spell = "E"},
-        ["UFSlash"]         = {true, charName = "Malphite",  range = 1000,   projSpeed = 1800, Spell = "R"},
+        ["UFSlash"]         = {true, charName = "Malphite",  range = 1000,   projSpeed = 1500, Spell = "R"},
         ["RenektonSliceAndDice"]  = {true, charName = "Renekton",  range = 450,    projSpeed = 2000, Spell = "E"},
         ["SejuaniArcticAssault"]  = {true, charName = "Sejuani",   range = 650,    projSpeed = 2000, Spell = "Q"},
         ["ShenShadowDash"]      = {true, charName = "Shen",    range = 575,    projSpeed = 2000, Spell = "E"},
         ["RocketJump"]        = {true, charName = "Tristana",  range = 900,    projSpeed = 2000, Spell = "W"},
-        ["slashCast"]       = {true, charName = "Tryndamere",  range = 650,    projSpeed = 1450, Spell = "E"}
+        ["slashCast"]       = {true, charName = "Tryndamere",  range = 650,    projSpeed = 1450, Spell = "E"},
+        ["YasuoSweepingBlade"]       = {true, charName = "Yasuo",  range = 475,    projSpeed = 1000, Spell = "E"}, --
+        ["ShyvanaDragonsDescent"]       = {true, charName = "Shyvana",  range = 1000,    projSpeed = 2000, Spell = "R"}, --
+        ["RivenValor"]       = {true, charName = "Riven",  range = 150,    projSpeed = 2000, Spell = "E"}, -- 
+        ["LucianRelentlessPursuit"]       = {true, charName = "Lucian",  range = 425,    projSpeed = 2000, Spell = "E"}, -- 
+        ["FioraLunge"]       = {true, charName = "Fiora",  range = 600,    projSpeed = 2000, Spell = "Q"}, -- 
+        ["DariusNoxianGuillotine"]       = {true, charName = "Darius",  range = 460,    projSpeed = math.huge, Spell = "R"}, -- 
+        ["CorkiValkyrie"]       = {true, charName = "Corki",  range = 800,    projSpeed = 650, Spell = "W"}, -- 
+        ["BandageToss"]       = {true, charName = "Amumu",  range = 1100,    projSpeed = 1800, Spell = "Q"}, --
+        ["AhriTumble"]       = {true, charName = "Ahri",  range = 450,    projSpeed = 2200, Spell = "R"} --
     }
 
 
