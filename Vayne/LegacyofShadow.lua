@@ -1,4 +1,4 @@
-local Version = 1.462
+local Version = 1.464
 local FileName = GetCurrentEnv().FILE_NAME
 local Debug = false
 
@@ -1122,15 +1122,19 @@ function OnTick()
   Checks()
   Targets()
   
+ if (VIP_USER) then
   if Combo and Menu.Combo.vision then
     Bushfind()
   end
-  
+ end
+ 
+ if (VIP_USER) then
   if Menu.extras.UseAutoLevelFirst or Menu.extras.UseAutoLevelRest then
     CheckLevelChange()
     LevelUpSpell()
     LevelUpSpellFirst()
   end
+ end 
 
   if Menu.popup then
     Menu.popup = false
@@ -1253,18 +1257,18 @@ end
 function Targets()
 
     if ValidTarget(SelectedTarget) then
-        target_return = SelectedTarget
+        target = SelectedTarget
     elseif _G.MMA_IsLoaded then 
-        target_return = _G.MMA_Target()
+        target = _G.MMA_Target()
     elseif _G.AutoCarry and _G.Reborn_Initialised then 
-        target_return = _G.AutoCarry.Crosshair:GetTarget()
+        target = _G.AutoCarry.Crosshair:GetTarget()
     elseif _G._Pewalk then 
-        target_return = _G._Pewalk.GetTarget()
+        target = _G._Pewalk.GetTarget()
     elseif NOWLoaded then
-        target_return = _G.NebelwolfisOrbWalker:GetTarget()
+        target = _G.NebelwolfisOrbWalker:GetTarget()
     end
 
-    if ValidTarget(target_return) and target_return.type == myHero.type then
+    if ValidTarget(target) and target.type == myHero.type then
         return SelectedTarget
     else
         ts:update()
@@ -1869,7 +1873,7 @@ function GetDmg(spell, enemy)
 
     elseif spell == "Q" then
     if Q.ready then
-      ADDmg = (.05*Q.level+.25)*TotalDmg
+      ADDmg = (.1*Q.level+.2)*TotalDmg
     end
     
     elseif spell == "W" then
